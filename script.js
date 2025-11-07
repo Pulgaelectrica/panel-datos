@@ -1,81 +1,56 @@
-const stocks = {
-  bitcoin: { name: "Bitcoin", symbol: "BINANCE:BTCUSDT" },
-  oro: { name: "Oro (XAU/EUR)", symbol: "OANDA:XAU_EUR" },
-  sp500: { name: "S&P 500", symbol: "INDEX:SPX" },
-  nvidia: { name: "Nvidia", symbol: "NASDAQ:NVDA" },
-  tesla: { name: "Tesla", symbol: "NASDAQ:TSLA" },
-  apple: { name: "Apple", symbol: "NASDAQ:AAPL" },
-  amazon: { name: "Amazon", symbol: "NASDAQ:AMZN" },
-  google: { name: "Google", symbol: "NASDAQ:GOOGL" }
-};
+const API_BASE = "https://panel-datos-gjfb.vercel.app/api/finnhub-proxy"; // Cambia por tu URL real en Vercel
 
-// Guardar últimos 7 datos para graficar
-const history = {};
-Object.keys(stocks).forEach(key => history[key] = []);
+const symbols = [
+  "BINANCE:BTCUSDT",
+  "OANDA:XAU_EUR",
+  "INDEX:SPX",
+  "NASDAQ:NVDA",
+  "NASDAQ:TSLA",
+  "NASDAQ:AAPL",
+  "NASDAQ:AMZN",
+  "NASDAQ:GOOGL"
+];
 
 async function fetchData(symbol) {
   try {
-    const res = await fetch(`/api/finnhub-proxy?symbol=${symbol}`);
-    const data = await res.json();
-    // Finnhub devuelve "c" = precio actual
-    return data.c;
-  } catch (err) {
-    console.error("Error fetchData", err);
+    const response = await fetch(`${API_BASE}?symbol=${encodeURIComponent(symbol)}`);
+
+    if (!response.ok) {
+      console.warn(`Error ${response.status} al obtener ${symbol}`);
+      return null; // Retorna null si hay error
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error(`Error fetchData ${symbol}:`, error);
     return null;
   }
 }
 
-async function updateCard(key) {
-  const price = await fetchData(stocks[key].symbol);
-  if (price === null) return;
+async function updateCard(card, symbol) {
+  const data = await fetchData(symbol);
+  
+  if (!data || data.c === undefined) {
+    card.querySelector(".value").textContent = "Error";
+    card.style.backgroundColor = "#800"; // Rojo si hay error
+    return;
+  }
 
-  const container = document.getElementById(key);
+  const change = data.d || 0;
+  const changePercent = data.dp || 0;
 
-  // Actualizar historial
-  history[key].push(price);
-  if (history[key].length > 7) history[key].shift();
-
-  const data = history[key];
-  const variation = ((data[data.length - 1] / data[0] - 1) * 100).toFixed(2);
-  const absChange = (data[data.length - 1] - data[data.length - 2]).toFixed(2);
-  const positive = variation >= 0;
-
-  container.style.backgroundColor = positive ? "#008000" : "#a30000";
-  container.innerHTML = `
-    <div style="font-size: 1.2em; font-weight: bold;">${stocks[key].name}</div>
-    <div style="font-size: 1.5em;">€${data[data.length - 1].toFixed(2)}</div>
-    <div style="font-size: 1em;">${absChange} (${variation}%)</div>
-    <canvas id="chart_${key}"></canvas>
-  `;
-
-  const ctx = document.getElementById(`chart_${key}`).getContext("2d");
-  new Chart(ctx, {
-    type: "line",
-    data: {
-      labels: data.map((_, i) => i + 1),
-      datasets: [{
-        data: data,
-        borderColor: "white",
-        borderWidth: 1,
-        fill: false,
-        tension: 0.3
-      }]
-    },
-    options: {
-      plugins: { legend: { display: false } },
-      scales: { x: { display: false }, y: { display: false } }
-    }
-  });
+  card.querySelector(".symbol").textContent = symbol;
+  card.querySelector(".value").textContent = data.c.toFixed(2);
+  card.querySelector(".change").textContent = `${change.toFixed(2)} (${changePercent.toFixed(2)}%)`;
+  
+  // Cambiar color según el cambio
+  card.style.backgroundColor = change >= 0 ? "#060" : "#800";
 }
 
 async function updateAll() {
-  for (const key of Object.keys(stocks)) {
-    await updateCard(key);
-  }
-}
+  const cards = document.querySelectorAll(".card");
+  for (let i = 0; i < cards.length;
 
-// Actualizar cada minuto
-updateAll();
-setInterval(updateAll, 60000);
 
 

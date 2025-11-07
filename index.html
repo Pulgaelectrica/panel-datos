@@ -2,23 +2,65 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=800, height=480">
-  <title>Panel Económico</title>
-  <link rel="stylesheet" href="style.css">
+  <meta name="viewport" content="width=800, height=480, initial-scale=1.0">
+  <title>Panel de Datos</title>
+
+  <!-- Fuente segura sin problemas de carga -->
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 800px;
+      height: 480px;
+      background: #000;
+      font-family: 'Roboto', sans-serif;
+      overflow: hidden;
+    }
+
+    #grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      grid-template-rows: repeat(2, 1fr);
+      width: 100%;
+      height: 100%;
+    }
+
+    .card {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      transition: background-color 0.5s ease;
+      border: none;
+      padding: 5px;
+      background-color: #333; /* color por defecto */
+    }
+
+    .price {
+      font-size: 24px;
+      font-weight: bold;
+    }
+
+    .change {
+      font-size: 16px;
+    }
+  </style>
 </head>
 <body>
   <div id="grid">
-    <div class="card" id="bitcoin">Bitcoin</div>
-    <div class="card" id="oro">Oro</div>
-    <div class="card" id="sp500">S&P 500</div>
-    <div class="card" id="nvidia">Nvidia</div>
-    <div class="card" id="tesla">Tesla</div>
-    <div class="card" id="apple">Apple</div>
-    <div class="card" id="amazon">Amazon</div>
-    <div class="card" id="google">Google</div>
+    <div class="card"><div class="price">--</div><div class="change">--</div></div>
+    <div class="card"><div class="price">--</div><div class="change">--</div></div>
+    <div class="card"><div class="price">--</div><div class="change">--</div></div>
+    <div class="card"><div class="price">--</div><div class="change">--</div></div>
+    <div class="card"><div class="price">--</div><div class="change">--</div></div>
+    <div class="card"><div class="price">--</div><div class="change">--</div></div>
+    <div class="card"><div class="price">--</div><div class="change">--</div></div>
+    <div class="card"><div class="price">--</div><div class="change">--</div></div>
   </div>
 
-  <!-- Script que actualiza los valores desde la función serverless -->
   <script src="script.js"></script>
 </body>
 </html>
