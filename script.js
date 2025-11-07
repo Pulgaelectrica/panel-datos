@@ -9,26 +9,27 @@ const stocks = {
   google: { name: "Google", symbol: "GOOGL" }
 };
 
-async function fetchStock(symbol) {
+async function fetchData(symbol) {
   try {
-    const res = await fetch(`/.netlify/functions/finnhub-proxy?symbol=${symbol}`);
+    const res = await fetch(`/api/finnhub-proxy?symbol=${symbol}`);
     const data = await res.json();
-    return data;
-  } catch (err) {
-    console.error(err);
-    return null;
+    return data.c ? [data.c] : [0]; // usamos solo el último precio
+  } catch (e) {
+    console.error(e);
+    return [0];
   }
 }
 
-function createCard(id, title, price, change) {
+function createCard(id, title, data) {
   const container = document.getElementById(id);
-  const variation = change ? ((change / price) * 100).toFixed(2) : 0;
+  const variation = ((data[data.length - 1] / data[0] - 1) * 100).toFixed(2);
+  const absChange = (data[data.length - 1] - data[data.length - 2] || 0).toFixed(2);
   const positive = variation >= 0;
   container.style.backgroundColor = positive ? "#008000" : "#a30000";
   container.innerHTML = `
     <div style="font-size: 1.2em; font-weight: bold;">${title}</div>
-    <div style="font-size: 1.5em;">€${price.toFixed(2)}</div>
-    <div style="font-size: 1em;">${change.toFixed(2)} (${variation}%)</div>
+    <div style="font-size: 1.5em;">€${data[data.length - 1].toFixed(2)}</div>
+    <div style="font-size: 1em;">${absChange} (${variation}%)</div>
     <canvas id="chart_${id}"></canvas>
   `;
 
@@ -36,31 +37,20 @@ function createCard(id, title, price, change) {
   new Chart(ctx, {
     type: "line",
     data: {
-      labels: Array(7).fill("").map((_, i) => i + 1),
-      datasets: [{
-        data: Array(7).fill(price),
-        borderColor: "white",
-        borderWidth: 1,
-        fill: false,
-        tension: 0.3
-      }]
+      labels: data.map((_, i) => i + 1),
+      datasets: [{ data: data, borderColor: "white", borderWidth: 1, fill: false, tension: 0.3 }]
     },
-    options: {
-      plugins: { legend: { display: false } },
-      scales: { x: { display: false }, y: { display: false } }
-    }
+    options: { plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { display: false } } }
   });
 }
 
 async function updateAll() {
-  for (let key of Object.keys(stocks)) {
-    const data = await fetchStock(stocks[key].symbol);
-    if (data) {
-      createCard(key, stocks[key].name, data.c, data.d);
-    }
+  for (const key of Object.keys(stocks)) {
+    const data = await fetchData(stocks[key].symbol);
+    createCard(key, stocks[key].name, data);
   }
 }
 
-// Actualizar cada minuto
+// refresca cada minuto
 updateAll();
 setInterval(updateAll, 60000);
