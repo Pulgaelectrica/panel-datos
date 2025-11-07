@@ -1,43 +1,34 @@
-const API_URL = '/.netlify/functions/finnhub-proxy';
-const REFRESH_INTERVAL = 60000; // 1 minuto
-
 const stocks = {
   bitcoin: { name: "Bitcoin", symbol: "BINANCE:BTCUSDT" },
-  oro: { name: "Oro (XAU/EUR)", symbol: "OANDA:XAU_EUR" },
-  sp500: { name: "S&P 500", symbol: "INDEX:SPX" },
-  nvidia: { name: "Nvidia", symbol: "NASDAQ:NVDA" },
-  tesla: { name: "Tesla", symbol: "NASDAQ:TSLA" },
-  apple: { name: "Apple", symbol: "NASDAQ:AAPL" },
-  amazon: { name: "Amazon", symbol: "NASDAQ:AMZN" },
-  google: { name: "Google", symbol: "NASDAQ:GOOGL" }
+  oro: { name: "Oro (XAU/EUR)", symbol: "XAU=EUR" },
+  sp500: { name: "S&P 500", symbol: "^GSPC" },
+  nvidia: { name: "Nvidia", symbol: "NVDA" },
+  tesla: { name: "Tesla", symbol: "TSLA" },
+  apple: { name: "Apple", symbol: "AAPL" },
+  amazon: { name: "Amazon", symbol: "AMZN" },
+  google: { name: "Google", symbol: "GOOGL" }
 };
 
 async function fetchStock(symbol) {
   try {
-    const res = await fetch(`${API_URL}?symbol=${encodeURIComponent(symbol)}`);
+    const res = await fetch(`/.netlify/functions/finnhub-proxy?symbol=${symbol}`);
     const data = await res.json();
-    return data.c; // precio actual
-  } catch (e) {
-    console.error(`Error al cargar ${symbol}`, e);
+    return data;
+  } catch (err) {
+    console.error(err);
     return null;
   }
 }
 
-async function updateCard(id, title, symbol, prevData = []) {
-  const price = await fetchStock(symbol);
-  if (price === null) return prevData;
-
-  const data = [...prevData, price].slice(-7); // mantener últimas 7 medidas
+function createCard(id, title, price, change) {
   const container = document.getElementById(id);
-  const variation = ((data[data.length - 1] / data[0] - 1) * 100).toFixed(2);
-  const absChange = (data[data.length - 1] - data[data.length - 2]).toFixed(2);
+  const variation = change ? ((change / price) * 100).toFixed(2) : 0;
   const positive = variation >= 0;
-
   container.style.backgroundColor = positive ? "#008000" : "#a30000";
   container.innerHTML = `
     <div style="font-size: 1.2em; font-weight: bold;">${title}</div>
-    <div style="font-size: 1.5em;">€${data[data.length - 1].toFixed(2)}</div>
-    <div style="font-size: 1em;">${absChange} (${variation}%)</div>
+    <div style="font-size: 1.5em;">€${price.toFixed(2)}</div>
+    <div style="font-size: 1em;">${change.toFixed(2)} (${variation}%)</div>
     <canvas id="chart_${id}"></canvas>
   `;
 
@@ -45,9 +36,9 @@ async function updateCard(id, title, symbol, prevData = []) {
   new Chart(ctx, {
     type: "line",
     data: {
-      labels: data.map((_, i) => i + 1),
+      labels: Array(7).fill("").map((_, i) => i + 1),
       datasets: [{
-        data: data,
+        data: Array(7).fill(price),
         borderColor: "white",
         borderWidth: 1,
         fill: false,
@@ -59,15 +50,17 @@ async function updateCard(id, title, symbol, prevData = []) {
       scales: { x: { display: false }, y: { display: false } }
     }
   });
-
-  return data;
 }
 
-const cardData = {};
-Object.keys(stocks).forEach(async key => {
-  cardData[key] = [];
-  cardData[key] = await updateCard(key, stocks[key].name, stocks[key].symbol, cardData[key]);
-  setInterval(async () => {
-    cardData[key] = await updateCard(key, stocks[key].name, stocks[key].symbol, cardData[key]);
-  }, REFRESH_INTERVAL);
-});
+async function updateAll() {
+  for (let key of Object.keys(stocks)) {
+    const data = await fetchStock(stocks[key].symbol);
+    if (data) {
+      createCard(key, stocks[key].name, data.c, data.d);
+    }
+  }
+}
+
+// Actualizar cada minuto
+updateAll();
+setInterval(updateAll, 60000);
