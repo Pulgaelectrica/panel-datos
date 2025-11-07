@@ -1,15 +1,15 @@
 const stocks = {
-  bitcoin: { name: "Bitcoin", symbol: "BINANCE:BTCUSDT" },
-  oro: { name: "Oro (XAU/EUR)", symbol: "OANDA:XAU_EUR" },
-  sp500: { name: "S&P 500", symbol: "INDEX:SPX" },
-  nvidia: { name: "Nvidia", symbol: "NASDAQ:NVDA" },
-  tesla: { name: "Tesla", symbol: "NASDAQ:TSLA" },
-  apple: { name: "Apple", symbol: "NASDAQ:AAPL" },
-  amazon: { name: "Amazon", symbol: "NASDAQ:AMZN" },
-  google: { name: "Google", symbol: "NASDAQ:GOOGL" }
+  bitcoin: { name: "Bitcoin", symbol: "BINANCE:BTCUSDT", history: [] },
+  oro: { name: "Oro (XAU/EUR)", symbol: "OANDA:XAU_EUR", history: [] },
+  sp500: { name: "S&P 500", symbol: "INDEX:SPX", history: [] },
+  nvidia: { name: "Nvidia", symbol: "NASDAQ:NVDA", history: [] },
+  tesla: { name: "Tesla", symbol: "NASDAQ:TSLA", history: [] },
+  apple: { name: "Apple", symbol: "NASDAQ:AAPL", history: [] },
+  amazon: { name: "Amazon", symbol: "NASDAQ:AMZN", history: [] },
+  google: { name: "Google", symbol: "NASDAQ:GOOGL", history: [] }
 };
 
-// Función para obtener el precio actual desde la función proxy
+// Obtener precio desde la función proxy
 async function fetchStock(symbol) {
   try {
     const res = await fetch(`/.netlify/functions/finnhub-proxy?symbol=${symbol}`);
@@ -21,11 +21,16 @@ async function fetchStock(symbol) {
   }
 }
 
-// Función para actualizar cada tarjeta
+// Actualiza cada tarjeta y gráfico
 async function updateCard(id, stock) {
   const price = await fetchStock(stock.symbol);
   const container = document.getElementById(id);
-  const prev = container.dataset.prev ? parseFloat(container.dataset.prev) : price;
+
+  // Guardar histórico de los últimos 7 precios
+  stock.history.push(price);
+  if (stock.history.length > 7) stock.history.shift();
+
+  const prev = stock.history.length > 1 ? stock.history[stock.history.length - 2] : price;
   const absChange = (price - prev).toFixed(2);
   const variation = ((price / prev - 1) * 100).toFixed(2);
   const positive = variation >= 0;
@@ -38,14 +43,13 @@ async function updateCard(id, stock) {
     <canvas id="chart_${id}"></canvas>
   `;
 
-  // Crear gráfico simple con 7 puntos iguales al último precio
   const ctx = document.getElementById(`chart_${id}`).getContext("2d");
   new Chart(ctx, {
     type: "line",
     data: {
-      labels: [1,2,3,4,5,6,7],
+      labels: stock.history.map((_, i) => i + 1),
       datasets: [{
-        data: Array(7).fill(price),
+        data: stock.history,
         borderColor: "white",
         borderWidth: 1,
         fill: false,
@@ -57,8 +61,6 @@ async function updateCard(id, stock) {
       scales: { x: { display: false }, y: { display: false } }
     }
   });
-
-  container.dataset.prev = price;
 }
 
 // Actualiza todas las tarjetas
@@ -70,5 +72,5 @@ async function updateAll() {
 
 // Ejecutar al inicio y cada minuto
 updateAll();
-set
+setInterval(updateAll, 60000);
 
