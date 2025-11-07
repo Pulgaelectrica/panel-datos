@@ -1,66 +1,23 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=800, height=480, initial-scale=1.0">
-  <title>Panel de Datos</title>
-
-  <!-- Fuente segura sin problemas de carga -->
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-
-  <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      width: 800px;
-      height: 480px;
-      background: #000;
-      font-family: 'Roboto', sans-serif;
-      overflow: hidden;
-    }
-
-    #grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      grid-template-rows: repeat(2, 1fr);
-      width: 100%;
-      height: 100%;
-    }
-
-    .card {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      color: white;
-      transition: background-color 0.5s ease;
-      border: none;
-      padding: 5px;
-      background-color: #333; /* color por defecto */
-    }
-
-    .price {
-      font-size: 24px;
-      font-weight: bold;
-    }
-
-    .change {
-      font-size: 16px;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=800, height=480">
+<title>Panel de Datos</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div id="grid">
-    <div class="card"><div class="price">--</div><div class="change">--</div></div>
-    <div class="card"><div class="price">--</div><div class="change">--</div></div>
-    <div class="card"><div class="price">--</div><div class="change">--</div></div>
-    <div class="card"><div class="price">--</div><div class="change">--</div></div>
-    <div class="card"><div class="price">--</div><div class="change">--</div></div>
-    <div class="card"><div class="price">--</div><div class="change">--</div></div>
-    <div class="card"><div class="price">--</div><div class="change">--</div></div>
-    <div class="card"><div class="price">--</div><div class="change">--</div></div>
-  </div>
-
-  <script src="script.js"></script>
+<div id="grid">
+  <div class="card" id="card-0"><canvas></canvas></div>
+  <div class="card" id="card-1"><canvas></canvas></div>
+  <div class="card" id="card-2"><canvas></canvas></div>
+  <div class="card" id="card-3"><canvas></canvas></div>
+  <div class="card" id="card-4"><canvas></canvas></div>
+  <div class="card" id="card-5"><canvas></canvas></div>
+  <div class="card" id="card-6"><canvas></canvas></div>
+  <div class="card" id="card-7"><canvas></canvas></div>
+</div>
+<script src="script.js" type="module"></script>
 </body>
 </html>
+

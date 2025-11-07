@@ -1,11 +1,10 @@
-/* style.css */
 html, body {
   margin: 0;
   padding: 0;
   width: 800px;
   height: 480px;
   background: #000;
-  font-family: Arial, sans-serif; /* fuente segura */
+  font-family: Arial, sans-serif;
   overflow: hidden;
 }
 
@@ -15,7 +14,6 @@ html, body {
   grid-template-rows: repeat(2, 1fr);
   width: 100%;
   height: 100%;
-  gap: 5px;
 }
 
 .card {
@@ -27,8 +25,6 @@ html, body {
   transition: background-color 0.5s ease;
   border: none;
   padding: 5px;
-  background-color: #222; /* color de fondo inicial */
-  border-radius: 8px;
 }
 
 .card canvas {

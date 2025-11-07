@@ -1,5 +1,3 @@
-const API_BASE = "https://panel-datos-gjfb.vercel.app/api/finnhub-proxy"; // Cambia por tu URL real en Vercel
-
 const symbols = [
   "BINANCE:BTCUSDT",
   "OANDA:XAU_EUR",
@@ -13,44 +11,41 @@ const symbols = [
 
 async function fetchData(symbol) {
   try {
-    const response = await fetch(`${API_BASE}?symbol=${encodeURIComponent(symbol)}`);
-
-    if (!response.ok) {
-      console.warn(`Error ${response.status} al obtener ${symbol}`);
-      return null; // Retorna null si hay error
-    }
-
-    const data = await response.json();
+    const res = await fetch(`/api/finnhub-proxy?symbol=${symbol}`);
+    const data = await res.json();
     return data;
-  } catch (error) {
-    console.error(`Error fetchData ${symbol}:`, error);
+  } catch (err) {
+    console.error("Error fetchData", err);
     return null;
   }
 }
 
-async function updateCard(card, symbol) {
+async function updateCard(cardId, symbol) {
   const data = await fetchData(symbol);
+  const card = document.getElementById(`card-${cardId}`);
   
   if (!data || data.c === undefined) {
-    card.querySelector(".value").textContent = "Error";
-    card.style.backgroundColor = "#800"; // Rojo si hay error
+    card.style.backgroundColor = "#333";
+    card.innerHTML = `<p>Error</p>`;
     return;
   }
 
-  const change = data.d || 0;
-  const changePercent = data.dp || 0;
-
-  card.querySelector(".symbol").textContent = symbol;
-  card.querySelector(".value").textContent = data.c.toFixed(2);
-  card.querySelector(".change").textContent = `${change.toFixed(2)} (${changePercent.toFixed(2)}%)`;
-  
-  // Cambiar color según el cambio
-  card.style.backgroundColor = change >= 0 ? "#060" : "#800";
+  const change = data.d;
+  card.style.backgroundColor = change >= 0 ? "green" : "red";
+  card.innerHTML = `
+    <p>${symbol}</p>
+    <p>${data.c.toFixed(2)}</p>
+    <p>${change.toFixed(2)} (${data.dp.toFixed(2)}%)</p>
+  `;
 }
 
 async function updateAll() {
-  const cards = document.querySelectorAll(".card");
-  for (let i = 0; i < cards.length;
+  for (let i = 0; i < symbols.length; i++) {
+    await updateCard(i, symbols[i]);
+  }
+}
 
-
+// Actualizar cada 10 segundos
+updateAll();
+setInterval(updateAll, 10000);
 
